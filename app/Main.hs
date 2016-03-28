@@ -6,6 +6,7 @@ import Web.Scotty.Internal.Types (ActionT(..))
 import Data.Monoid (mconcat)
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.Except
+import Control.Monad.Trans.Reader
 {-
  - newtype ScottyT e m a =
  -   ScottyT { runS :: State (ScottyState e m) a }
@@ -30,7 +31,7 @@ main = scotty 3000 $ do
     -- notice that the IO is placed in ActionM:
     (ActionT
      . (ExceptT . fmap Right)
-     . lift
+     . (ReaderT . const)
      . lift) (putStrLn "hello")
     html $ mconcat ["<h1>Scotty, ", beam, " me up!</h1>"]
 
