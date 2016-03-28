@@ -2,12 +2,8 @@
 module Main where
 
 import Web.Scotty
-import Web.Scotty.Internal.Types (ActionT(..))
 import Data.Monoid (mconcat)
-import Control.Monad.Trans.Class
-import Control.Monad.Trans.Except
-import Control.Monad.Trans.Reader
-import Control.Monad.Trans.State.Lazy hiding (get)
+import Control.Monad.IO.Class
 
 {-
  - newtype ScottyT e m a =
@@ -26,18 +22,13 @@ import Control.Monad.Trans.State.Lazy hiding (get)
  - class MonadTrans t where
  -   lift :: (Monad m) => m a -> t m a
  -}
+main :: IO ()
 main = scotty 3000 $ do
   -- get :: RoutePattern -> ActionM () -> ScottyM ()
   get "/:word" $ do
     beam <- param "word"
     -- notice that the IO is placed in ActionM:
-    (ActionT
-     . (ExceptT . fmap Right)
-     . (ReaderT . const)
-     . (\m -> StateT (\s -> do
-                         a <- m -- get the monadic action
-                         return (a, s)))
-     ) (putStrLn "hello")
+    liftIO (putStrLn "hello")
     html $ mconcat ["<h1>Scotty, ", beam, " me up!</h1>"]
 
 
