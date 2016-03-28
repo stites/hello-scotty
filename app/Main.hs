@@ -7,6 +7,8 @@ import Data.Monoid (mconcat)
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.Except
 import Control.Monad.Trans.Reader
+import Control.Monad.Trans.State.Lazy hiding (get)
+
 {-
  - newtype ScottyT e m a =
  -   ScottyT { runS :: State (ScottyState e m) a }
@@ -32,7 +34,10 @@ main = scotty 3000 $ do
     (ActionT
      . (ExceptT . fmap Right)
      . (ReaderT . const)
-     . lift) (putStrLn "hello")
+     . (\m -> StateT (\s -> do
+                         a <- m -- get the monadic action
+                         return (a, s)))
+     ) (putStrLn "hello")
     html $ mconcat ["<h1>Scotty, ", beam, " me up!</h1>"]
 
 
