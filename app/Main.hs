@@ -2,6 +2,7 @@
 module Main where
 
 import Web.Scotty
+import Web.Scotty.Internal.Types (ActionT(..))
 import Data.Monoid (mconcat)
 import Control.Monad.Trans.Class
 {-
@@ -26,7 +27,7 @@ main = scotty 3000 $ do
   get "/:word" $ do
     beam <- param "word"
     -- notice that the IO is placed in ActionM:
-    (lift :: IO a -> ActionM a) (putStrLn "hello")
+    (ActionT . lift . lift . lift) (putStrLn "hello")
     html $ mconcat ["<h1>Scotty, ", beam, " me up!</h1>"]
 
 
