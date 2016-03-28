@@ -9,43 +9,20 @@ import Control.Monad.Trans.Maybe
 import Data.Text.Lazy (Text)
 import Data.Maybe (fromMaybe)
 
-{-
- - newtype ScottyT e m a =
- -   ScottyT { runS :: State (ScottyState e m) a }
- -   deriving ( Functor, Applicative, Monad )
- -
- - newtype ActionT e m a =
- -   ActionT { runAM :: ExceptT (ActionError e)
- -                              (ReaderT ActionEnv
- -                                       (StateT ScottyResponse m)) a }
- -   deriving ( Functor, Applicative )
- -
- - type ScottyM = ScottyT Text IO
- - type ActionM = ActionT Text IO
- -
- - class MonadTrans t where
- -   lift :: (Monad m) => m a -> t m a
- -}
+leftErr ::Parsable a => Text -> Either String a
+leftErr k = Left $ "the key: " ++ show k ++ " was missing!"
 
-param' :: Parsable a => Text -> MaybeT ActionM a
-param' k = MaybeT $ rescue (Just <$> param k) (const (return Nothing))
-
-type Reco = (Integer, Integer, Integer, Integer)
+param' :: Parsable a => Text -> ActionM (Either String a)
+param' k = rescue (Right <$> param k) (const.return $ leftErr k)
 
 main :: IO ()
 main = scotty 3000 $ do
-  -- get :: RoutePattern -> ActionM () -> ScottyM ()
   get "/:word" $ do
     beam <- param "word"
-    -- reco :: Maybe Reco
-    reco <- runMaybeT $ do
-      a <- param' "1"
-      b <- param' "2"
-      c <- param' "3"
-      d <- param' "4"
-      (lift.lift) $ print b
-      return ((a,b,c,d) :: Reco)
-    liftIO $ print reco
+    a <- param' "1"
+    let a' = either (const 0) id a
+    liftIO $ print (a :: Either String Int)
+    liftIO $ print (a' :: Int)
     html $ mconcat ["<h1>Scotty, ", beam, " me up!</h1>"]
 
 
